@@ -4,13 +4,48 @@ import './index.css';
 import * as serviceWorker from './serviceWorker';
 
 const request = require('request');
-const qs = require('query-string');
 
-class Picture extends React.Component {
-
+class Mode extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {
+            mode: this.props.mode
+        }
+        this.changeModeToSearch = this.changeModeToSearch.bind(this);
+        this.changeModeToUpload = this.changeModeToUpload.bind(this);
     }
+
+    changeModeToSearch() {
+        this.setState({mode: "search"});
+    }
+
+    changeModeToUpload() {
+        this.setState({mode: "upload"});
+    }
+
+    prepareSearchBody = () => <Query />;
+
+    prepareUploadBody = () => <Upload />;
+
+    render() {
+        let mainBody = null;
+        if (this.state.mode === "search"){
+           mainBody = this.prepareSearchBody();
+        }
+        if (this.state.mode === "upload") {
+            mainBody = this.prepareUploadBody();
+        }
+        return (
+        [<div className="navbar">
+            <button type="button" onClick={this.changeModeToSearch}>Search</button>
+            <button type="button" onClick={this.changeModeToUpload}>Upload</button>
+        </div>,
+        mainBody]
+        );
+    }
+}
+
+class Picture extends React.Component {
 
     buildTagTable = () => {
         let table = []
@@ -24,31 +59,30 @@ class Picture extends React.Component {
     render() {
         return (
             <div className="picture">
-                <img src={this.props.url} alt={this.props.tags.join('_')}/>
-                <table>
-                        {this.buildTagTable()}
-                </table>
+            <img src={this.props.url} alt={this.props.tags.join('_')}/>
             </div>
         )
     }
 }
 
-
 class Content extends React.Component {
-    
-    parsePics(comp, error, response, body) {
-        console.log(comp);
-        console.log(error);
-        console.log(response);
-        console.log(body);
-        let res = JSON.parse(body);
-        comp.setState({pics: null});
-        let local_pics = [];
-        for (let p of res) {
-            local_pics.push(<Picture url={p.imgUrl} tags={p.tagList} />);
-        }
 
-        comp.setState({pics: local_pics});
+    parsePics(comp, error, response, body) {
+        console.log(error);
+        if (error !== null){
+            comp.setState({pics: error });
+        }else{
+            console.log(response);
+            console.log(body);
+            let res = JSON.parse(body);
+            comp.setState({pics: null});
+            let local_pics = [];
+            for (let p of res) {
+                local_pics.push(<Picture url={p.imgUrl} tags={p.tagList} />);
+            }
+
+            comp.setState({pics: local_pics});
+        }
     }
 
     constructor(props) {
@@ -60,20 +94,21 @@ class Content extends React.Component {
         this.refresh(this.props.tags);
     }
 
-    buildTagsQuery = (tags) => 'https://overdio.herokuapp.com/images/searchByTags?tags=' + tags.join('&tags='); 
+    buildTagsQuery = (tags) => 
+        'https://overdio.herokuapp.com/images/searchByTags?tags=' + tags.join('&tags='); 
 
     refresh(tags){
         let pf = (a, b, c) => {this.parsePics(this, a, b, c)};
         if (tags !== [] && tags !== "") {
-           request(
-               this.buildTagsQuery(tags),
-               pf
-           );
+            request(
+                this.buildTagsQuery(tags),
+                pf
+            );
         }else{
-           request(
-               'https://overdio.herokuapp.com/images',
-               pf
-           );
+            request(
+                'https://overdio.herokuapp.com/images',
+                pf
+            );
         }
     }
 
@@ -91,18 +126,20 @@ class Query extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.state = {
             value: '',
-            content: <Content ref={this.contentRef} tags="" />
+            content:    <div className = "content-space">
+            <Content ref={this.contentRef} tags="" />
+            </div>
         }
     }
 
     handleChange(event) {
         this.setState({value: event.target.value });
         let lastState = event.target.value;
-        if (lastState[lastState.length - 1] === ' '){
+        if (lastState.trim() === ''){
+            this.contentRef.current.refresh("");
+        }else if (lastState[lastState.length - 1] === ' '){
             let query = lastState.substring(0, lastState.length - 1).split(' ');
             this.contentRef.current.refresh(query);
-        }else if (lastState.trim() === ''){
-            this.contentRef.current.refresh("");
         }
     }
 
@@ -114,11 +151,11 @@ class Query extends React.Component {
     render() {
         return ([
             <form onSubmit={this.handleSubmit}>
-                <input  type="text" 
-                        value={this.state.value} 
-                        onChange= {this.handleChange} 
-                        name="tag-query" 
-                        className="input" />
+            <input  type="text" 
+            value={this.state.value} 
+            onChange= {this.handleChange} 
+            name="tag-query" 
+            className="input" />
             </form>,
             this.state.content
         ]
@@ -126,8 +163,98 @@ class Query extends React.Component {
     }
 }
 
-const tags_c = ['jojo'];
-const element = <Query />;
+class Upload extends React.Component {
+    
+    constructor(props) {
+        super(props);
+        this.state = {
+            pic: null,
+            tags: "tagme"
+        }
+
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.handleTagsChange = this.handleTagsChange.bind(this);
+    }
+
+    handleChange(event) {
+        if (this.state.pic != null){
+            URL.revokeObjectURL(this.state.pic);
+        }
+        this.setState({
+            pic: URL.createObjectURL(event.target.files[0])
+        });
+    }
+
+    handleTagsChange(event) {
+        this.setState({tags: event.target.value});
+    }
+
+
+    sendRequest(tags, content) {
+        let formdata = {
+            method: 'POST',
+            uri: 'https://overdio.herokuapp.com/images/upload',
+            headers: {
+                'content-type': 'multipart/form-data',
+            },
+            multipart: {
+                chunked: false,
+                data:[
+                    {
+                        'Content-Disposition': 'form-data; name="tagList"',
+                        body : tags
+                    },
+                    {
+                        'Content-Disposition': 'form-data; name="data"',
+                        body: content.target.result
+                    }
+                ]
+            },
+       };
+
+        request(formdata,
+            function (err, resp, body) {console.log(err + "-" + resp + "-" + body);});
+    }
+
+    handleSubmit(event) {
+        event.preventDefault();
+        let tags = this.state.tags;
+        console.log(tags);
+        let data = document.getElementById('pic').files[0];
+        let fr = new window.FileReader();
+        fr.onload = (e) => this.sendRequest(tags, e);
+        fr.readAsArrayBuffer(data);
+    }
+
+    render() {
+        let imgComp = null;
+        if (this.state.pic != null){
+            imgComp = <img className="preview" src={this.state.pic} alt="preview"/>;
+        }
+        return (
+            <div className="content-space tac form">
+            {imgComp}
+            <form onSubmit={this.handleSubmit} id="upload-form">
+            <input type="file" id="pic" onChange={this.handleChange}/><br/>
+            <textarea
+                value={this.state.tags}
+                onChange={this.handleTagsChange}
+                name="tag-upload"
+                className="textarea"
+                form="upload-form"
+                rows="5"
+                cols="80"
+            ></textarea><br/>
+            <input type="submit" onClick={this.handleSubmit} value="Upload !"/>
+            </form>
+            </div>
+        );
+    }
+}
+
+//const element = <Query />;
+const element = <Mode mode="search"/>;
 ReactDOM.render(
     element,
     document.getElementById('root'));
