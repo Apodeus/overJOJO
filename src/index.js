@@ -243,7 +243,7 @@ class Upload extends React.Component {
 
     handleSubmit(event) {
         event.preventDefault();
-        let tags = this.state.tags;
+        let tags = this.state.tags.trim();
         console.log(tags);
         let data = document.getElementById('pic').files[0];
         let fr = new window.FileReader();
@@ -256,12 +256,21 @@ class Upload extends React.Component {
         if (this.state.pic != null){
             imgComp = <img className="preview" src={this.state.pic} alt="preview"/>;
         }
+        let hint = 'Hint: If you\'re lazy, set a "tagme" tag and wait for others to fill them for you.';
         return (
             <div className="content-space tac form">
             {imgComp}
             <form onSubmit={this.handleSubmit} id="upload-form">
-            <input type="file" id="pic" onChange={this.handleChange}/><br/>
+            <tr><td className="lab-field"> 
+            <label for="pic">Picture to upload : </label>
+            </td><td>
+            <input type="file" id="pic" onChange={this.handleChange}/>
+            </td></tr>
+            <tr><td className="lab-field">
+            <label for="tagsarea">Tags (separated by whitespaces): </label>
+            </td><td>
             <textarea
+                id="tagsarea"
                 value={this.state.tags}
                 onChange={this.handleTagsChange}
                 name="tag-upload"
@@ -269,9 +278,13 @@ class Upload extends React.Component {
                 form="upload-form"
                 rows="5"
                 cols="80"
-            ></textarea><br/>
+            ></textarea>
+            </td></tr>
+            <tr><td></td><td>
             <input type="submit" onClick={this.handleSubmit} value="Upload !"/>
+            </td></tr>
             </form>
+            <i>{hint}</i>
             </div>
         );
     }

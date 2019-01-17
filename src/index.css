@@ -84,3 +84,17 @@ textarea {
     border-radius: 10px;
     resize: none;
 }
+
+label {
+    vertical-align: top;
+    text-align: right;
+}
+
+form {
+    text-align: left;
+}
+
+.lab-field {
+    text-align: right;
+    vertical-align: top;
+}
