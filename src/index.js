@@ -35,10 +35,22 @@ class Mode extends React.Component {
         if (this.state.mode === "upload") {
             mainBody = this.prepareUploadBody();
         }
+
+            this.searchEnabled = (this.state.mode === "upload" ? false : true);
+            this.uploadEnabled = (this.state.mode === "search" ? false : true);
         return (
         [<div className="navbar">
-            <button type="button" onClick={this.changeModeToSearch}>Search</button>
-            <button type="button" onClick={this.changeModeToUpload}>Upload</button>
+            <button type="button" 
+                disabled={this.searchEnabled} 
+                onClick={this.changeModeToSearch}>
+                Search
+            </button>
+
+            <button type="button"
+                disabled={this.uploadEnabled} 
+                onClick={this.changeModeToUpload}>
+                Upload
+            </button>
         </div>,
         mainBody]
         );
