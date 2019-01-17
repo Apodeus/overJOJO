@@ -147,6 +147,23 @@ class Query extends React.Component {
     handleChange(event) {
         this.setState({value: event.target.value });
         let lastState = event.target.value;
+        if (lastState === ''){
+            this.contentRef.current.refresh("");
+        }else if (lastState[lastState.length - 1] === ' '){
+            lastState = lastState.trim();
+            let query = lastState.substring(0, lastState.length).split(' ');
+            this.contentRef.current.refresh(query);
+        }
+    }
+
+    handleSubmit(event) {
+        event.preventDefault();
+        this.setState({value: this.state.value.trim() + " "});
+        this.work();
+    }
+
+    work(){
+        let lastState = this.state.value.trim() + " ";
         if (lastState.trim() === ''){
             this.contentRef.current.refresh("");
         }else if (lastState[lastState.length - 1] === ' '){
@@ -154,11 +171,6 @@ class Query extends React.Component {
             this.contentRef.current.refresh(query);
         }
     }
-
-    handleSubmit(event) {
-
-    }
-
 
     render() {
         return ([
