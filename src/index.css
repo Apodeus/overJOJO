@@ -32,7 +32,6 @@ body {
     margin-left: auto;
     margin-right: auto;
     width: 70%;
-    margin-top: 5%;
     font-size: 300%;
     text-indent: 40px;
     border-radius: 40px;
@@ -159,4 +158,16 @@ a {
     bottom: 15%;
     margin: auto;
     background-color: ghostwhite;
+}
+
+a.cross-search {
+    vertical-align: middle;
+    font-size: 17pt;
+    position: absolute;
+    right: 16%;
+    top: 32%;
+}
+
+.navbar {
+    margin-bottom: 5%;
 }

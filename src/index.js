@@ -178,6 +178,7 @@ class Query extends React.Component {
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.addToQuery = this.addToQuery.bind(this);
+        this.clearSearch = this.clearSearch.bind(this);
         this.state = {
             value: '',
             content:    <div className = "">
@@ -221,14 +222,22 @@ class Query extends React.Component {
         }
     }
 
+    clearSearch(e) {
+        e.preventDefault();
+        this.setState({value: ""});
+        this.work(' ');
+    }
+
     render() {
         return ([
-            <form onSubmit={this.handleSubmit}>
+            <form onSubmit={this.handleSubmit} className="search-field">
+            <div style={{position: 'relative'}}>
             <input  type="text" 
             value={this.state.value} 
             onChange= {this.handleChange} 
             name="tag-query" 
-            className="input" />
+            className="input" /><a className="cross-search" href="#" onClick={this.clearSearch}><img style={{width: '24px', color: 'rgba(0, 0, 0, 0.75)'}}src="cross.png" alt="clear" title="Clear"/></a>
+            </div>
             </form>,
             this.state.content
         ]
