@@ -443,7 +443,7 @@ class PicturePopup extends React.Component {
     sendRequest(obj) {
         console.log(obj);
         let formdata = {
-            method: 'PUT',
+            method: 'PATCH',
             uri: 'https://overdio.herokuapp.com/images/' + obj.id,
             json: {
                 _id: obj.id,
