@@ -58,6 +58,7 @@ button {
     color: ghostwhite;
     font-size: 24px;
     transition-duration: 0.3s;
+    cursor: pointer;
 }
 
 button:hover{
@@ -97,4 +98,34 @@ form {
 .lab-field {
     text-align: right;
     vertical-align: top;
+}
+
+.cloud {
+    text-align: center;
+    margin-bottom: 10%;
+    padding-top: 3%;
+    padding-bottom: 3%;
+}
+
+td.cloud-tag {
+    display: inline-block;
+    background-color: lightblue;
+    border-radius: 10px;
+    margin-left: 2%;
+    margin-right: 2%;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+td.cloud-tag:hover {
+    background-color: lightseagreen;
+}
+
+i {
+    font-size: 9pt;
+}
+
+a {
+    text-decoration: none;
+    color: black;
 }

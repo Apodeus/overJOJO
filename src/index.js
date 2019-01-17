@@ -71,7 +71,7 @@ class Picture extends React.Component {
     render() {
         return (
             <div className="picture">
-            <img src={this.props.url} alt={this.props.tags.join('_')}/>
+            <img src={this.props.url} title={this.props.tags.join(' ')} alt={this.props.tags.join(' ')}/>
             </div>
         )
     }
@@ -89,8 +89,10 @@ class Content extends React.Component {
             let res = JSON.parse(body);
             comp.setState({pics: null});
             let local_pics = [];
+            this.footerRef.current.resetTags();
             for (let p of res) {
                 local_pics.push(<Picture url={p.imgUrl} tags={p.tagList} />);
+                this.footerRef.current.addTags(p.tagList);
             }
 
             comp.setState({pics: local_pics});
@@ -100,8 +102,10 @@ class Content extends React.Component {
     constructor(props) {
         console.log("Content created with props : " + props);
         super(props);
+        this.footerRef = React.createRef();
         this.state = {
-            pics: null
+            pics: null,
+            tagCloud: <TagFooter ref={this.footerRef} addToQuery={this.props.tagCallback}/>
         };
         this.refresh(this.props.tags);
     }
@@ -125,7 +129,9 @@ class Content extends React.Component {
     }
 
     render() {
-        return this.state.pics;
+        return ([
+            <div className="content-space">{this.state.pics}</div>,
+            this.state.tagCloud]);
     }
 }
 
@@ -136,12 +142,19 @@ class Query extends React.Component {
         this.contentRef = React.createRef();
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.addToQuery = this.addToQuery.bind(this);
         this.state = {
             value: '',
-            content:    <div className = "content-space">
-            <Content ref={this.contentRef} tags="" />
+            content:    <div className = "">
+            <Content ref={this.contentRef} tags="" tagCallback={this.addToQuery}/>
             </div>
         }
+    }
+
+    addToQuery(tag) {
+        let force = (this.state.value + tag + " ");
+        this.setState({value: force});
+        this.work(force);
     }
 
     handleChange(event) {
@@ -162,8 +175,9 @@ class Query extends React.Component {
         this.work();
     }
 
-    work(){
-        let lastState = this.state.value.trim() + " ";
+    work(forced){
+
+        let lastState = (forced === undefined ? this.state.value.trim() + " " : forced);
         if (lastState.trim() === ''){
             this.contentRef.current.refresh("");
         }else if (lastState[lastState.length - 1] === ' '){
@@ -283,8 +297,78 @@ class Upload extends React.Component {
             <tr><td></td><td>
             <input type="submit" onClick={this.handleSubmit} value="Upload !"/>
             </td></tr>
-            </form>
+            </form><br />
             <i>{hint}</i>
+            </div>
+        );
+    }
+}
+
+class TagFooter extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            tagsList: [],
+            tagsNum: []
+        }
+
+        this.addToQuery = this.props.addToQuery;
+
+    }
+
+    resetTags() {
+        this.setState({
+            tagsList: [],
+            tagsNum: []});
+    }
+
+    addTags(array){
+        let tagsNum = this.state.tagsNum;
+        let tagList = this.state.tagsList;
+        for (let t of array){
+            if (tagList.includes(t)){
+                tagsNum[t] += 1
+            }else{
+                tagsNum[t] = 1;
+                tagList.push(t);
+            }
+        }
+
+        this.setState({tagsNum: tagsNum, tagsList: tagList});
+    }
+
+    prepareTagCloud() {
+        let res = [];
+        let tuples = [];
+        let total = 0;
+        for (let t in this.state.tagsNum){    
+            tuples.push([t, this.state.tagsNum[t]]);
+            total += this.state.tagsNum[t];
+        }
+
+        let sortedTagList = tuples.sort(function (a, b) {
+            if (a[1] < b[1]) 
+                return 1;
+            else if (a[1] > b[1]) 
+                return -1;
+            else 
+                return 0;
+        });
+
+        for (let t of sortedTagList){
+            let fs = {'fontSize': 11 + (50 * (t[1]/total))};
+            let f = function(e) {e.preventDefault(); console.log(t[0]); this.addToQuery(t[0])};
+            f = f.bind(this);
+            res.push(<td style={fs} className="cloud-tag"><a href="#" onClick={f}>{t[0]}</a></td>);
+        }
+
+        return res;
+    }
+
+    render() {
+        return (
+            <div className="content-space cloud">
+            {this.prepareTagCloud()}
             </div>
         );
     }
