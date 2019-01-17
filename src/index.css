@@ -21,10 +21,8 @@ body {
 .picture {
     width: 17%;
     height: 25%;
-    /*border-style: solid;
-    border-color: red;
-    border-width: thin;*/
-    border: none;
+    border-width: 0;
+    border-style: solid;
     display: inline-block;
     text-align: center;
     vertical-align: middle;
