@@ -53,6 +53,19 @@ body {
 button {
     width: 50%;
     height: 3%;
+    border: none;
+    background-color: lightseagreen;
+    color: ghostwhite;
+    font-size: 24px;
+    transition-duration: 0.3s;
+}
+
+button:hover{
+    background-color: darkcyan;
+}
+
+button:disabled{
+    border-bottom: solid 8px darkturquoise;
 }
 
 .preview {
