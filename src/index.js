@@ -328,7 +328,6 @@ class Upload extends React.Component {
                 className="textarea"
                 form="upload-form"
                 rows="5"
-                cols="80"
             ></textarea>
             </td></tr>
             <tr><td></td><td>
@@ -479,7 +478,7 @@ class PicturePopup extends React.Component {
                     <form onSubmit={this.handleSubmit} id="upload-form">
                     <tr><td className="lab-field">
                     <label for="tagsarea">Tags (separated by whitespaces): </label>
-                    </td><td>
+                    </td><td className="val-field">
                     <textarea
                         id="tagsarea"
                         value={title}
@@ -488,10 +487,9 @@ class PicturePopup extends React.Component {
                         className="textarea"
                         form="upload-form"
                         rows="5"
-                        cols="80"
                     ></textarea>
                     </td></tr>
-                    <tr><td></td><td>
+                    <tr><td></td><td className="val-field">
                     <input type="submit" onClick={this.handleSubmit} value="Update !" style={ml}/>
                     <a href="#" onClick={this.props.closer} style={a}>Cancel</a>
                     </td></tr>

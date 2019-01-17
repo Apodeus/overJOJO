@@ -84,6 +84,7 @@ textarea {
     border-style: groove;
     border-radius: 10px;
     resize: none;
+    width: 100%;
 }
 
 label {
@@ -98,6 +99,11 @@ form {
 .lab-field {
     text-align: right;
     vertical-align: top;
+    width: 25%;
+}
+
+.val-field {
+    width: 75%;
 }
 
 .cloud {
