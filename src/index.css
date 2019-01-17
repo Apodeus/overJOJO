@@ -10,16 +10,26 @@ body {
   background-color: lightblue;
 }
 
-.picture {
-    width: 17.7%;
-    height: 25%;
+.picture:hover {
+    margin: 1.5%;
     border-style: solid;
+    border-color: darkcyan;
+    border-width: thick;
+    transition-duration: 0.3s;
+}
+
+.picture {
+    width: 17%;
+    height: 25%;
+    /*border-style: solid;
     border-color: red;
-    border-width: thin;
+    border-width: thin;*/
+    border: none;
     display: inline-block;
     text-align: center;
     vertical-align: middle;
-    margin: 1%
+    margin: 1%;
+    transition-duration: 0.3s;
 }
 
 .picture img {
@@ -41,6 +51,7 @@ body {
 .content-space {
     margin-top: 5%;
     display: block;
+    text-align: center;
     margin-left: auto;
     margin-right: auto;
     width: 70%;
