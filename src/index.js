@@ -60,6 +60,8 @@ class Mode extends React.Component {
 class Picture extends React.Component {
 
     constructor(props) {
+        console.log("pic created with");
+        console.log(props);
         super(props);
         this.state = {
             showPopup: false,
@@ -78,6 +80,7 @@ class Picture extends React.Component {
 
     togglePopupWOEvent() {
         this.setState({showPopup: !this.state.showPopup});
+        this.props.refreshCallback();
     }
 
     togglePopup(e) {
@@ -111,6 +114,7 @@ class Content extends React.Component {
 
     parsePics(comp, error, response, body) {
         console.log(error);
+        let rcb = this.refresh.bind(this);
         if (error !== null){
             comp.setState({pics: error });
         }else{
@@ -121,7 +125,8 @@ class Content extends React.Component {
             let local_pics = [];
             this.footerRef.current.resetTags();
             for (let p of res) {
-                local_pics.push(<Picture url={p.imgUrl} tags={p.tagList} date={p.creationDate} id={p._id}/>);
+                console.log(p);
+                local_pics.push(<Picture url={p.imgUrl} tags={p.tagList} date={p.creationDate} id={p._id} refreshCallback={rcb}/>);
                 this.footerRef.current.addTags(p.tagList);
             }
 
@@ -145,7 +150,7 @@ class Content extends React.Component {
 
     refresh(tags){
         let pf = (a, b, c) => {this.parsePics(this, a, b, c)};
-        if (tags !== [] && tags !== "") {
+        if (tags != undefined && tags !== [] && tags !== "") {
             request(
                 this.buildTagsQuery(tags),
                 pf
@@ -451,10 +456,10 @@ class PicturePopup extends React.Component {
         console.log(tags);
         this.sendRequest(
             {
-                id: this.state.id,
-                url: this.state.url,
+                id: this.props.id,
+                url: this.props.url,
                 tags: tags,
-                creationDate: this.state.date
+                date: this.props.date
             });
     }
 
@@ -462,7 +467,7 @@ class PicturePopup extends React.Component {
         let imgComp = null;
         let title = this.state.tags;
         if (this.state.url != null){
-            imgComp = <img className="preview" src={this.state.url} alt={title} title={title}/>;
+            imgComp = <a href={this.state.url} target="_blank"><img className="preview" src={this.state.url} alt={title} title={title}/></a>;
         }
         let hint = 'Hint: If you\'re lazy, set a "tagme" tag and wait for others to fill them for you.';
         let ml = {marginRight: '10px'};
