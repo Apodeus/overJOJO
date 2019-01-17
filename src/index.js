@@ -25,7 +25,7 @@ class Mode extends React.Component {
 
     prepareSearchBody = () => <Query />;
 
-    prepareUploadBody = () => <Upload />;
+    prepareUploadBody = () => <Upload callback={this.changeModeToSearch.bind(this)}/>;
 
     render() {
         let mainBody = null;
@@ -59,6 +59,13 @@ class Mode extends React.Component {
 
 class Picture extends React.Component {
 
+    constructor(props) {
+        super(props);
+        this.state = {
+            showPopup: false,
+        }
+    }
+
     buildTagTable = () => {
         let table = []
         for (let tag of this.props.tags) {
@@ -68,12 +75,35 @@ class Picture extends React.Component {
         return table
     }
 
+
+    togglePopupWOEvent() {
+        this.setState({showPopup: !this.state.showPopup});
+    }
+
+    togglePopup(e) {
+        e.preventDefault();
+        this.setState({showPopup: !this.state.showPopup});
+    }
+
     render() {
-        return (
+        let f = this.togglePopup.bind(this);
+        let f2 = this.togglePopupWOEvent.bind(this);
+        return ([
             <div className="picture">
+            <a href="#" onClick={this.togglePopup.bind(this)}>
             <img src={this.props.url} title={this.props.tags.join(' ')} alt={this.props.tags.join(' ')}/>
-            </div>
-        )
+            </a>
+            </div>,
+            this.state.showPopup ? <PicturePopup 
+                url={this.props.url} 
+                tags={this.props.tags}
+                id={this.props.id}
+                date={this.props.date}
+                closer={f}
+                callback={f2}
+                />
+            : null
+        ])
     }
 }
 
@@ -91,7 +121,7 @@ class Content extends React.Component {
             let local_pics = [];
             this.footerRef.current.resetTags();
             for (let p of res) {
-                local_pics.push(<Picture url={p.imgUrl} tags={p.tagList} />);
+                local_pics.push(<Picture url={p.imgUrl} tags={p.tagList} date={p.creationDate} id={p._id}/>);
                 this.footerRef.current.addTags(p.tagList);
             }
 
@@ -207,7 +237,8 @@ class Upload extends React.Component {
         super(props);
         this.state = {
             pic: null,
-            tags: "tagme"
+            tags: "tagme",
+            uploading: false
         }
 
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -252,11 +283,12 @@ class Upload extends React.Component {
        };
 
         request(formdata,
-            function (err, resp, body) {console.log(err + "-" + resp + "-" + body);});
+            (function (err, resp, body) {this.setState({uploading: false}); console.log(err + "-" + resp + "-" + body); this.props.callback()}).bind(this));
     }
 
     handleSubmit(event) {
         event.preventDefault();
+        this.setState({uploading: true});
         let tags = this.state.tags.trim();
         console.log(tags);
         let data = document.getElementById('pic').files[0];
@@ -271,7 +303,7 @@ class Upload extends React.Component {
             imgComp = <img className="preview" src={this.state.pic} alt="preview"/>;
         }
         let hint = 'Hint: If you\'re lazy, set a "tagme" tag and wait for others to fill them for you.';
-        return (
+        return ([
             <div className="content-space tac form">
             {imgComp}
             <form onSubmit={this.handleSubmit} id="upload-form">
@@ -299,7 +331,8 @@ class Upload extends React.Component {
             </td></tr>
             </form><br />
             <i>{hint}</i>
-            </div>
+            </div>,
+            this.state.uploading ? <BigInfo text="Uploading..." /> : null]
         );
     }
 }
@@ -374,7 +407,115 @@ class TagFooter extends React.Component {
     }
 }
 
-//const element = <Query />;
+class PicturePopup extends React.Component {
+    constructor (props) {
+        super(props);
+        this.state = {
+            id: this.props.id,
+            url: this.props.url,
+            tags: this.props.tags.join(' '),
+            date: this.props.date,
+            tagging: false
+        }
+
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleTagsChange = this.handleTagsChange.bind(this);
+    }
+
+    handleTagsChange(event) {
+        this.setState({tags: event.target.value});
+    }
+
+
+    sendRequest(obj) {
+        console.log(obj);
+        let formdata = {
+            method: 'PUT',
+            uri: 'https://overdio.herokuapp.com/images/' + obj.id,
+            json: {
+                _id: obj.id,
+                imgUrl: obj.url,
+                tagList: obj.tags.split(' '),
+                creationDate: obj.date
+            },
+       };
+
+        request(formdata,
+            (function (err, resp, body) {this.setState({tagging: false}); this.props.callback();console.log(err + "-" + resp + "-" + body);}).bind(this));
+    }
+
+    handleSubmit(event) {
+        event.preventDefault();
+        this.setState({tagging: false});
+        let tags = this.state.tags.trim();
+        console.log(tags);
+        this.sendRequest(
+            {
+                id: this.state.id,
+                url: this.state.url,
+                tags: tags,
+                creationDate: this.state.date
+            });
+    }
+
+    render() {
+        let imgComp = null;
+        let title = this.state.tags;
+        if (this.state.url != null){
+            imgComp = <img className="preview" src={this.state.url} alt={title} title={title}/>;
+        }
+        let hint = 'Hint: If you\'re lazy, set a "tagme" tag and wait for others to fill them for you.';
+        let ml = {marginRight: '10px'};
+        let a = {color: 'darkred'};
+        return ([
+            <div className="popup-bg">
+                <div className="popup-fg">
+                    {imgComp}
+                    <form onSubmit={this.handleSubmit} id="upload-form">
+                    <tr><td className="lab-field">
+                    <label for="tagsarea">Tags (separated by whitespaces): </label>
+                    </td><td>
+                    <textarea
+                        id="tagsarea"
+                        value={title}
+                        onChange={this.handleTagsChange}
+                        name="tag-upload"
+                        className="textarea"
+                        form="upload-form"
+                        rows="5"
+                        cols="80"
+                    ></textarea>
+                    </td></tr>
+                    <tr><td></td><td>
+                    <input type="submit" onClick={this.handleSubmit} value="Update !" style={ml}/>
+                    <a href="#" onClick={this.props.closer} style={a}>Cancel</a>
+                    </td></tr>
+                    </form><br />
+                    <i>{hint}</i>
+                </div>
+            </div>,
+            this.state.tagging ? <BigInfo text="Updating..." /> : null
+        ]);
+    }
+}
+
+class BigInfo extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        let bgs = {textAlign: 'center'};
+        let ps = {textAlign: 'center', fontSize:'12em', color: 'rgba(255, 255, 255, 0.75)'}
+        return(
+        <div style={bgs} className="popup-bg">
+        <p style={ps}>{this.props.text}</p>
+        </div>);
+    }
+}
+
+
+
 const element = <Mode mode="search"/>;
 ReactDOM.render(
     element,
